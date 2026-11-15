@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { Store } from './store.mjs';
 import { acquire } from './transport.mjs';
 import { inspect } from './reader.mjs';
+import { startProvider } from './provider.mjs';
 
 export async function startService({ source, directory, port = 0 }) {
   const store = await new Store(directory).initialize();
@@ -39,8 +40,24 @@ export async function startService({ source, directory, port = 0 }) {
     close: () => new Promise(resolve => server.close(resolve)) };
 }
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  if (!process.env.SOURCE_URL) throw new Error('SOURCE_URL_required');
-  const service = await startService({ source: process.env.SOURCE_URL,
-    directory: process.env.DATA_DIR ?? './data', port: Number(process.env.PORT ?? 4102) });
-  console.log(JSON.stringify({ product: service.url }));
+  const provider = process.env.SOURCE_URL ? null : await startProvider();
+  const source = process.env.SOURCE_URL ?? provider.url;
+  let service;
+  try {
+    service = await startService({ source, directory: process.env.DATA_DIR ?? './data',
+      port: Number(process.env.PORT ?? 4102) });
+  } catch (error) {
+    if (provider) await provider.close();
+    throw error;
+  }
+  let closing = false;
+  const close = async () => {
+    if (closing) return;
+    closing = true;
+    await service.close();
+    if (provider) await provider.close();
+  };
+  process.once('SIGTERM', close);
+  process.once('SIGINT', close);
+  console.log(JSON.stringify({ product: service.url, source }));
 }
