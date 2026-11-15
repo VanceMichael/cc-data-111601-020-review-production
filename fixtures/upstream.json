@@ -1,0 +1,68 @@
+{
+  "catalog": {
+    "entry": "/production",
+    "otherProduction": "/public"
+  },
+  "resources": {
+    "/primary": {
+      "file": "primary.bin",
+      "type": "application/octet-stream"
+    },
+    "/images.opt": {
+      "file": "resource-01.bin",
+      "type": "text/plain"
+    },
+    "/VOL1/native/parent.txt": {
+      "file": "resource-02.bin",
+      "type": "text/plain",
+      "phases": {}
+    },
+    "/VOL1/text/parent.txt": {
+      "file": "resource-03.bin",
+      "type": "text/plain",
+      "phases": {}
+    },
+    "/VOL2/native/child.txt": {
+      "file": "resource-04.bin",
+      "type": "text/plain",
+      "phases": {}
+    },
+    "/VOL2/text/child.txt": {
+      "file": "resource-05.bin",
+      "type": "text/plain",
+      "phases": {}
+    },
+    "/VOL1/images/1.tif": {
+      "file": "resource-06.bin",
+      "type": "text/plain",
+      "phases": {}
+    },
+    "/VOL1/images/2.tif": {
+      "file": "resource-07.bin",
+      "type": "text/plain",
+      "phases": {}
+    },
+    "/VOL2/images/3.tif": {
+      "file": "resource-08.bin",
+      "type": "text/plain",
+      "phases": {
+        "1": {
+          "status": 404
+        }
+      }
+    },
+    "/PUBLIC/text/parent.txt": {
+      "file": "resource-09.bin",
+      "type": "text/plain",
+      "phases": {}
+    },
+    "/production": {
+      "file": "resource-10.bin",
+      "type": "application/json"
+    },
+    "/public": {
+      "file": "resource-11.bin",
+      "type": "application/json"
+    }
+  }
+}
