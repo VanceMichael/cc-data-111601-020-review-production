@@ -19,3 +19,13 @@ export function inspect(bytes) {
   if (rows.some(row => row.length !== rows[0].length)) throw new Error('dat_width');
   return { kind: 'review-load-file', columns: rows[0], rows: rows.slice(1) };
 }
+export function optRows(text) {
+  const lines = text.split(/\r?\n/).filter(line => line.length > 0);
+  if (!lines.length) throw new Error('opt_empty');
+  return lines.map((line, rowIndex) => {
+    const fields = line.split(',');
+    if (fields.length !== 7) throw new Error('opt_width');
+    const [pageId, volume, path, documentBreak, folderBreak, boxBreak, pageCount] = fields;
+    return { rowIndex, pageId, volume, path, documentBreak, folderBreak, boxBreak, pageCount };
+  });
+}

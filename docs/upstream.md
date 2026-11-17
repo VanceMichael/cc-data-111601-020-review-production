@@ -4,6 +4,12 @@
 
 DAT 使用 UTF-8，U+00FE 包裹字段，U+0014 分隔字段，U+00AE 表示字段内换行；本交付不含转义 U+00FE。首行列名含 BEGDOC/ENDDOC/BEGATTACH/ENDATTACH/NATIVE/TEXT/VOLUME。OPT 为逗号分隔的 page-id,volume,path,document-break,folder-break,box-break,page-count，空字段保留，document-break=Y 开始文档。Bates 字符串是来源标识，不能从字符串算出一定存在的页；范围只用于核对 OPT 明列的页和交付声明。资源路径以 production 的 volumes 映射为基准，禁止跨交付私自找同名资源。/production 是 restricted、/public 是 public，各自有独立交付 id 和资源清单；共享 evidence id 或内容摘要不授予可见性。只接收本地合成资料，不处理真实案件或个人资料。
 
+## production 清单
+
+- 受限整份交付（如 `/production`）：`{"id","visibility":"restricted","dat","opt","volumes":{卷号:卷基址}}`。`dat`/`opt` 是同源 load file 路径，`volumes` 只允许同源根相对路径且不得含跨目录段。产品按清单领取 DAT/OPT，再按 DAT 的 VOLUME 选卷基址拼接图像（OPT path）、原生与文本（DAT NATIVE/TEXT）路径；空 NATIVE/TEXT 表示未声明。
+- 脱敏公开交付（如 `/public`）：`{"id","visibility":"public","evidenceIds":[...],"resources":{种类:同源路径},"native":null}`。产品只登记 `resources` 显式声明的链接；`native` 必须为 null，出现非空声明即结构拒收。清单未声明的原件不会因内容摘要相同而被链接到公开副本。
+- 两类清单都带独立 `id`（交付身份）；证据身份是 DAT/evidenceIds 中的 Bates 标识，两者在收件记录中分别持久保存。
+
 ## 当前来源路由
 
 - `/primary`：application/octet-stream
