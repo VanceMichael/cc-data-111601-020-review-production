@@ -4,9 +4,9 @@
 
 ## 当前能力
 
-能解析单个 DAT/OPT load file 并查看记录，尚无成组交付及可见性隔离收件。
+可解析单个 DAT/OPT load file，也可按一次 production 接收整组资料：读取清单、DAT 与 OPT，核对文档家族、页码范围、图像页和声明的原生／文本资源，把本次交付身份与证据身份分层保存，并留下可定位的收件问题。
 
-`src/reader.mjs` 提供现有单件读取契约；`src/transport.mjs` 只访问配置来源的同源地址，拒绝隐式跳转；`src/store.mjs` 保存原件摘要和解释结果。`src/service.mjs` 是产品入口，`src/provider.mjs` 是独立 HTTP 联调来源，内容为无个人信息的本地样例。
+`src/reader.mjs` 提供 DAT/OPT 读取契约；`src/delivery.mjs` 做一次 production 的核对与问题判定；`src/transport.mjs` 只访问配置来源的同源地址，拒绝隐式跳转；`src/store.mjs` 保存原件摘要、解释结果与每次收件记录。`src/service.mjs` 是产品入口，`src/provider.mjs` 是独立 HTTP 联调来源，内容为无个人信息的本地样例。
 
 ## 环境与运行
 
@@ -19,7 +19,7 @@ npm run build
 npm run demo
 ```
 
-`npm run demo` 自动在本机回环端口启动来源与产品、领取一件资料、读取已保存结果，然后关闭服务并清理临时目录。它展示当前产品能力，不模拟尚不存在的能力。演示没有固定等待、外网访问或人工操作，通常数秒结束。扩展产品后可按实际能力更新演示路径；不要以打印预先保存的结果替代运行。
+`npm run demo` 自动在本机回环端口启动来源与产品，按 production 接收受限与公开两份交付并查看保存结果，然后关闭服务并清理临时目录。它展示当前产品能力，不模拟尚不存在的能力。演示没有固定等待、外网访问或人工操作，通常数秒结束。扩展产品后可按实际能力更新演示路径；不要以打印预先保存的结果替代运行。
 
 直接 `npm start` 即可启动产品，默认自动在临时回环端口创建本地合成来源，产品默认监听 127.0.0.1:4102。退出产品时同步关闭自带来源。需要联调独立来源时先运行 `npm run source`，再设置 SOURCE_URL=http://127.0.0.1:4101 运行 `npm start`；显式来源不会由产品关闭。DATA_DIR 可设置资料目录，PORT 可覆盖产品监听端口。构建产物位于 dist，启动、测试与演示均不需要外部服务或下载。
 
@@ -29,8 +29,12 @@ npm run demo
 - POST /intakes，JSON 为 {"path":"/primary"}：按现有 reader 接收单件原件；内容解释失败不登记资料。
 - GET /records：持久接收目录；同 source URL、同摘要重领返回原 id。
 - GET /objects/{digest}：读取已保存的原始字节。
+- POST /productions，JSON 为 {"manifest":"/production"}：按一次 production 接收整组资料，返回本次收件记录。
+- GET /deliveries：全部收件记录；同一交付多次接收都会保留。
+- GET /deliveries/{deliveryId}：按交付 id 取该交付最近一次收件记录。
+- GET /receipts/{receiptId}：按本次收件 id 取精确记录。
 
-这四项是兼容接口，后续扩展可以新增业务入口，但不能把 GET 请求变为写操作。收件记录当前只包含单件 raw 对象，不代表关联资料已完整。
+前四项是兼容接口，后续扩展可以新增业务入口，但不能把 GET 请求变为写操作。收件记录当前只包含单件 raw 对象，不代表关联资料已完整；production 收件的 `complete` 才表示本次交付核对无问题。收件记录的 `receiptId` 是本次交付身份，`delivery.id` 是清单声明的 production 身份，`evidence` 是按 Bates 文档号聚合的证据身份，三者不互相替代。
 
 ## 来源与资料
 
@@ -38,4 +42,4 @@ npm run demo
 
 ## 测试与构建
 
-`npm test` 覆盖现有读取器、畸形输入、真实 HTTP 领取、原件一致性、持久重开、同源边界和范围响应；领域读取行为在 test/domain.test.mjs。`npm run build` 对运行模块逐个执行语法校验并复制到 dist。`docker build -t review-production:local .` 可创建产品运行镜像；镜像默认运行实际演示，不含远程业务凭据。
+`npm test` 覆盖现有读取器、畸形输入、真实 HTTP 领取、原件一致性、持久重开、同源边界和范围响应，以及 production 收件的家族、页码归属、缺页、公开交付隔离与收件问题；领域读取行为在 test/domain.test.mjs，production 核对在 test/delivery.test.mjs。`npm run build` 对运行模块逐个执行语法校验并复制到 dist。`docker build -t review-production:local .` 可创建产品运行镜像；镜像默认运行实际演示，不含远程业务凭据。

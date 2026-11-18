@@ -59,3 +59,16 @@ test('显式来源仍用于领取，关闭产品不关闭外部来源', async t 
     assert.equal((await fetch(`${provider.url}/catalog`)).status, 200);
   } finally { t.after(() => provider.close()); }
 });
+
+test('产品启动后即可按 production 接收并查询', async t => {
+  const address = await launch(t);
+  const response = await fetch(`${address.product}/productions`, { method: 'POST',
+    headers: { 'content-type': 'application/json' }, body: JSON.stringify({ manifest: '/production' }) });
+  assert.equal(response.status, 201);
+  const record = await response.json();
+  assert.equal(record.delivery.id, 'P-PRIVATE');
+  assert.equal(record.complete, true);
+  const stored = await (await fetch(`${address.product}/deliveries/${record.delivery.id}`)).json();
+  assert.equal(stored.receiptId, record.receiptId);
+  assert.equal(stored.delivery.id, 'P-PRIVATE');
+});
